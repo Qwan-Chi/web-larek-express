@@ -51,9 +51,9 @@ function clearRefreshCookie(res: Response): void {
 function sendAuth(
   res: Response,
   userData: { email: string; name: string; _id: string },
+  refreshToken: string,
 ): void {
   const accessToken = signAccess({ _id: userData._id });
-  const refreshToken = signRefresh({ _id: userData._id });
   setRefreshCookie(res, refreshToken);
   res.json({
     user: { email: userData.email, name: userData.name },
@@ -74,7 +74,7 @@ export const register = (req: AuthRequest, res: Response, next: NextFunction) =>
       const token = signRefresh({ _id: user._id });
       found.tokens.push({ token });
       found.save().then(() => {
-        sendAuth(res, { email: user.email, name: user.name, _id: user._id.toString() });
+        sendAuth(res, { email: user.email, name: user.name, _id: user._id.toString() }, token);
       });
     }))
     .catch((err) => {
@@ -108,7 +108,7 @@ export const login = (req: AuthRequest, res: Response, next: NextFunction) => {
         const refreshToken = signRefresh({ _id: user._id });
         user.tokens.push({ token: refreshToken });
         user.save().then(() => {
-          sendAuth(res, { email: user.email, name: user.name, _id: user._id.toString() });
+          sendAuth(res, { email: user.email, name: user.name, _id: user._id.toString() }, refreshToken);
         });
       });
     })
